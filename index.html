@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Whispering Forest AI Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF3DC;--card:#FFFDF6;--ink:#4A3524;--muted:#7A6450;--line:#EBD3A2;--leaf:#2F7D32;--grass:#8CCB5A;--dry:#CDB27A;--ash:#8E7A66;--water:#5BB8E8;--orange:#F28A1E;--red:#E5493A;--green:#3FAE4A;--sun:#FFC83D;--btn:#F28A1E;--btnsh:#B85F0C;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1D2A1B;--card:#2A3B27;--ink:#FFF1D6;--muted:#CDBB9A;--line:#4B6144;--leaf:#9BE27F;--btn:#F5A03A;--btnsh:#A8620E;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1D2A1B;--card:#2A3B27;--ink:#FFF1D6;--muted:#CDBB9A;--line:#4B6144;--leaf:#9BE27F;--btn:#F5A03A;--btnsh:#A8620E;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Fredoka','Trebuchet MS',system-ui,sans-serif;font-size:20px;line-height:1.35}
+.wrap{max-width:900px;margin:0 auto;padding:16px 14px 48px}
+h1{margin:4px 0 2px;text-align:center;font-size:clamp(28px,6vw,44px);color:var(--leaf)}
+.sub{margin:0 0 12px;text-align:center;color:var(--muted);font-size:clamp(18px,3.6vw,23px)}
+#mapbox{position:relative;border-radius:32px;border:5px solid var(--card);box-shadow:0 6px 0 rgba(0,0,0,.14);overflow:hidden;background:#6FAE45}
+svg{display:block;width:100%;height:auto;touch-action:manipulation}
+svg text{font-family:'Fredoka',sans-serif;user-select:none}
+.burnt{filter:grayscale(1) brightness(.55)}
+.hl{fill-opacity:.22;stroke-width:6;opacity:0;transition:opacity .6s}
+.hl.on{opacity:1;animation:glow 1.3s ease-in-out infinite alternate}
+.hl.ok{stroke:#3FAE4A!important;fill:#3FAE4A!important;animation:none;opacity:1}
+.hl.dim{opacity:.55;stroke-width:3}
+@keyframes glow{from{stroke-opacity:.45}to{stroke-opacity:1}}
+.pop{transform-box:fill-box;transform-origin:50% 100%;animation:pop .5s cubic-bezier(.3,1.8,.5,1)}
+@keyframes pop{from{transform:scale(0)}}
+.hit{fill:transparent;cursor:pointer}
+.over{stroke:var(--sun);stroke-width:8}
+.tag{animation:fade .5s}
+@keyframes fade{from{opacity:0}}
+.ani{animation:bob 2s ease-in-out infinite alternate;transform-box:fill-box}
+@keyframes bob{to{transform:translateY(-8px)}}
+#stagebar{display:flex;align-items:center;gap:12px;margin:14px 0 6px}
+#bot{flex:0 0 76px;height:76px;border-radius:50%;background:var(--btn);display:grid;place-items:center;font-size:44px;box-shadow:0 5px 0 var(--btnsh)}
+#bot.busy{animation:bob .5s infinite alternate}
+#msg{flex:1;background:var(--card);border:4px solid var(--line);border-radius:26px;padding:12px 16px;font-size:clamp(20px,4vw,26px);font-weight:600;position:relative;min-height:76px;display:flex;align-items:center}
+#msg::before{content:'';position:absolute;left:-16px;top:28px;border:10px solid transparent;border-right-color:var(--line)}
+.big{display:block;width:100%;margin-top:14px;min-height:76px;border:0;border-radius:38px;background:var(--btn);color:#fff;font:inherit;font-size:clamp(24px,5vw,32px);font-weight:700;cursor:pointer;box-shadow:0 7px 0 var(--btnsh);transition:transform .12s}
+.big:active{transform:translateY(5px);box-shadow:0 2px 0 var(--btnsh)}
+.big.alt{background:var(--green);box-shadow:0 7px 0 #27803A}
+.card{background:var(--card);border:4px solid var(--line);border-radius:28px;padding:16px 18px;margin-top:14px}
+.card h2{margin:0 0 8px;font-size:clamp(24px,5vw,30px);color:var(--leaf)}
+.row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:2px dashed var(--line);font-size:clamp(18px,3.8vw,22px)}
+.row:last-of-type{border:0}.row b{font-size:1.2em}
+.leg{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;font-size:clamp(17px,3.5vw,20px)}
+.tools{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+.tool{min-height:96px;border:4px solid var(--line);border-radius:28px;background:var(--card);color:var(--ink);font:inherit;font-size:clamp(18px,4vw,22px);font-weight:600;cursor:grab;display:flex;align-items:center;gap:10px;justify-content:center;padding:8px;box-shadow:0 5px 0 var(--line)}
+.tool span{font-size:44px;line-height:1}
+.tool.sel{border-color:var(--orange);background:color-mix(in srgb,var(--sun) 30%,var(--card));transform:translateY(-3px)}
+.tabs{display:flex;gap:10px;margin-top:14px}
+.tabs button{flex:1;min-height:70px;border:4px solid var(--line);border-radius:35px;background:var(--card);color:var(--ink);font:inherit;font-size:clamp(20px,4.5vw,28px);font-weight:700;cursor:pointer}
+.tabs button.on{background:var(--btn);color:#fff;border-color:var(--btn);box-shadow:0 5px 0 var(--btnsh)}
+.badge{margin-top:14px;text-align:center;font-size:clamp(26px,6vw,36px);font-weight:700;color:var(--leaf);animation:fade .8s}
+.prog{height:16px;border-radius:8px;background:var(--line);margin-top:12px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--green);transition:width .4s}
+:focus-visible{outline:4px solid #6C4CF0;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🌳 Whispering Forest AI Scanner</h1>
+<p class="sub">Let AI help us find the parts of the forest that need our help!</p>
+<div id="mapbox"><svg id="map" viewBox="0 0 800 520" role="img" aria-label="Illustrated map of the Whispering Forest"></svg></div>
+<div id="stagebar"><div id="bot" aria-hidden="true">🤖</div><div id="msg" role="status" aria-live="polite"></div></div>
+<div id="panel"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const AR={A:{x:20,y:20,k:'d',empty:1,need:['tree'],n:'Damaged'},B:{x:285,y:20,k:'s',need:['tree','plant'],n:'Severely Damaged'},D:{x:550,y:20,k:'h',n:'Healthy'},E:{x:20,y:265,k:'h',n:'Healthy'},F:{x:285,y:265,k:'h',n:'Healthy'},C:{x:550,y:265,k:'d',need:['plant'],n:'Damaged'}};
+const W=250,H=230,COL={d:'#F28A1E',s:'#E5493A',h:'#3FAE4A'};
+const TOOLS={tree:['🌳','Plant Trees','Great! Trees can help make this area a better home for animals.'],plant:['🌿','Add Plants','Nice! Plants give food and shade for small animals.'],water:['💧','Add Water','Good thinking! Animals need water to drink.'],shelter:['🏠','Create Animal Shelter','Lovely! A shelter gives animals a safe place to rest.']};
+// fixed pseudo-random spots inside each area
+function spots(i){let s=i*977+13;const r=()=>(s=(s*16807)%2147483647)/2147483647;return Array.from({length:24},()=>[50+r()*150,70+r()*140])}
+Object.keys(AR).forEach((k,i)=>AR[k].sp=spots(i+1));
+let st='welcome',placed={A:[],B:[],C:[]},tool=null,view='after',found=new Set(),scanX=-40,last=null,timers=[];
+const T=(x,y,ch,sz,cls='',extra='')=>`<text x="${x}" y="${y}" font-size="${sz}" text-anchor="middle" class="${cls}" ${extra}>${ch}</text>`;
+const done=k=>AR[k].need?AR[k].need.every(n=>placed[k].some(p=>p.t===n)):false;
+function draw(){
+ let o=`<defs><linearGradient id="sc" x1="0" x2="1"><stop offset="0" stop-color="#7DF9FF" stop-opacity="0"/><stop offset=".7" stop-color="#7DF9FF" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity=".95"/></linearGradient></defs><rect width="800" height="520" fill="#6FAE45"/>`;
+ const restoredView=st==='final'&&view==='after';
+ for(const k in AR){const a=AR[k];const ok=a.k==='h'||restoredView||done(k)&&st==='final';
+  o+=`<rect x="${a.x}" y="${a.y}" width="${W}" height="${H}" rx="30" fill="${ok?'#8CCB5A':a.k==='s'?'#8E7A66':'#CDB27A'}"/>`;}
+ o+=`<path d="M 535 300 C 600 330, 640 390, 700 385 S 790 440, 810 470" fill="none" stroke="#5BB8E8" stroke-width="30" stroke-linecap="round"/><path d="M 535 300 C 600 330, 640 390, 700 385 S 790 440, 810 470" fill="none" stroke="#BDE9FF" stroke-width="6" stroke-dasharray="4 18" stroke-linecap="round"/>`;
+ for(const k in AR){const a=AR[k],S=a.sp,bx=a.x,by=a.y;let g='';
+  const showBurnt=!restoredView&&a.k!=='h';
+  if(a.k==='h'){for(let i=0;i<9;i++)g+=T(S[i][0],S[i][1],i%4===3?'🌿':i%2?'🌲':'🌳',i%4===3?30:40);g+=T(S[10][0],S[10][1],'🦋',26,'ani');}
+  if(showBurnt){const n=a.empty?0:a.k==='s'?7:3;g+=`<g class="burnt">`;for(let i=0;i<n;i++)g+=T(S[i][0],S[i][1],'🌳',38);if(a.empty)for(let i=0;i<4;i++)g+=T(S[i][0],S[i][1],'🪵',30);g+=`</g>`;
+   g+=T(S[12][0],S[12][1],'🔥',34,'ani')+(a.k==='s'?T(S[13][0],S[13][1],'🔥',34,'ani')+T(S[14][0],S[14][1],'💨',34,'ani'):'');
+   if(a.k==='d'&&!a.empty)g+=T(S[15][0],S[15][1],'💨',30,'ani');}
+  if((st==='plan'||st==='final')&&(st==='plan'||restoredView)&&placed[k])placed[k].forEach((p,i)=>{const id=k+i,pc=id===last?'pop':'';
+    if(p.t==='water')g+=`<ellipse cx="${S[16+i%3][0]}" cy="${S[16+i%3][1]+10}" rx="34" ry="20" fill="#5BB8E8" stroke="#BDE9FF" stroke-width="4" class="${pc}"/>`+T(S[16+i%3][0],S[16+i%3][1]+18,'💧',24,pc);
+    else{const sp=S[(p.t==='tree'?6:p.t==='plant'?12:18)+i%6];g+=T(sp[0],sp[1],p.t==='tree'?'🌳':p.t==='plant'?(i%2?'🌸':'🌿'):'🏠',p.t==='shelter'?44:p.t==='tree'?42:30,pc)}});
+  if(restoredView&&a.k!=='h'){const an=k==='A'?'🐦':k==='B'?'🦧':'🐿️';g+=T(S[20][0],S[20][1],an,40,'ani')+T(S[21][0],S[21][1],'🦋',26,'ani');}
+  o+=`<g transform="translate(${bx},${by})">${g}</g>`;}
+ for(const k in AR){const a=AR[k];const show=(st==='scan'&&found.has(k)&&a.k!=='h')||(st==='result'||st==='plan');
+  if(show&&(a.k!=='h'||st!=='scan')){const c=done(k)&&st==='plan'?'ok':'';
+   o+=`<rect class="hl ${a.k==='h'?'on dim':'on'} ${c}" x="${a.x+4}" y="${a.y+4}" width="${W-8}" height="${H-8}" rx="28" stroke="${COL[a.k]}" fill="${COL[a.k]}" ${a.k==='h'?'stroke-dasharray="10 8"':''}/>`;}
+  if(st==='result'||st==='plan'){const lab=`${k} — ${a.n}`,w=lab.length*13.5+22;o+=`<g class="tag"><rect x="${a.x+10}" y="${a.y+10}" width="${w}" height="38" rx="19" fill="${COL[a.k]}"/>`+T(a.x+10+w/2,a.y+36,lab,22,'','fill="#fff" font-weight="700"')+`</g>`;}
+  if(st==='plan'&&a.k!=='h'&&done(k))o+=T(a.x+W-34,a.y+44,'✅',34,'pop');
+  if(st==='plan')o+=`<rect class="hit" data-a="${k}" x="${a.x}" y="${a.y}" width="${W}" height="${H}" rx="30"/>`;}
+ if(st==='scan'&&scanX>=0)o+=`<rect x="${scanX-70}" y="0" width="70" height="520" fill="url(#sc)"/>`+T(scanX-36,262,'🔍',44);
+ $('#map').innerHTML=o;}
+const say=t=>$('#msg').textContent=t,panel=h=>$('#panel').innerHTML=h;
+const clr=()=>{timers.forEach(clearTimeout);timers=[]};
+function welcome(){st='welcome';clr();placed={A:[],B:[],C:[]};found=new Set();tool=null;last=null;view='after';draw();say('I can help you find areas that were damaged by the fire!');
+ panel(`<button class="big" id="go">🔍 SCAN THE FOREST</button>`);$('#go').onclick=scan;}
+function scan(){st='scan';found=new Set();draw();panel(`<div class="prog"><i id="pg"></i></div>`);$('#bot').classList.add('busy');
+ const steps=['🌳 Looking at the forest...','🔍 Scanning the trees...','🔥 Looking for damaged areas...','🗺️ Creating a forest damage map...'];say(steps[0]);
+ [1700,3400,5100].forEach((t,i)=>timers.push(setTimeout(()=>say(steps[i+1]),t)));
+ const t0=performance.now(),D=6800;
+ (function f(now){const p=Math.min(1,((now||performance.now())-t0)/D);scanX=p*880;
+  for(const k of ['A','B','C'])if(scanX>AR[k].x+W/2&&!found.has(k))found.add(k);
+  draw();const g=$('#pg');if(g)g.style.width=p*100+'%';
+  if(p<1&&st==='scan')requestAnimationFrame(f);else if(st==='scan'){$('#bot').classList.remove('busy');result();}})(t0);}
+function result(){st='result';scanX=-40;draw();say('AI Forest Scan Complete!');
+ panel(`<div class="card"><h2>🤖 AI Forest Report</h2><div class="row"><span>Areas scanned:</span><b>6</b></div><div class="row"><span>Damaged areas found:</span><b>3</b></div><div class="row"><span>Severely damaged areas:</span><b>1</b></div><div class="row"><span>Areas that may need new trees:</span><b>2</b></div>
+ <p style="font-weight:600;margin:12px 0 0">These areas may need help to become a healthy forest again.</p>
+ <div class="leg"><span>🟢 Healthy Forest</span><span>🟠 Damaged Area</span><span>🔴 Severely Damaged Area</span></div></div>
+ <button class="big alt" id="go">🌱 PLAN THE RESTORATION</button>`);$('#go').onclick=plan;}
+function plan(){st='plan';draw();say('I found the damaged areas. Now you can help decide what the forest needs!');renderPlan();}
+function renderPlan(){const n=['A','B','C'].filter(done).length;
+ panel(`<div class="tools">${Object.entries(TOOLS).map(([k,v])=>`<button class="tool ${tool===k?'sel':''}" draggable="true" data-t="${k}"><span>${v[0]}</span>${v[1]}</button>`).join('')}</div>
+ <div class="prog"><i style="width:${n/3*100}%"></i></div><p style="text-align:center;margin:6px 0 0;color:var(--muted)">Tap a tool, then tap a glowing area. Or drag it there!</p>
+ ${n===3?'<button class="big alt" id="fin">🗺️ SEE THE RESTORATION MAP</button>':''}`);
+ document.querySelectorAll('.tool').forEach(b=>{b.onclick=()=>{tool=b.dataset.t;renderPlan()};b.ondragstart=e=>{tool=b.dataset.t;e.dataTransfer.setData('text','x')}});
+ const f=$('#fin');if(f)f.onclick=final;}
+function put(k){if(st!=='plan')return;if(!tool){say('Pick a tool first: tree, plant, water or shelter!');return}
+ const a=AR[k];if(a.k==='h'){say('This part is already healthy! Try the glowing areas.');return}
+ if(placed[k].length>=8){say('This area looks full. Try another one!');return}
+ const was=done(k);placed[k].push({t:tool});last=k+(placed[k].length-1);
+ const need=a.need.includes(tool);say(need||done(k)?TOOLS[tool][2]:'This area still needs something. What could help animals live here?');
+ draw();if(done(k)&&!was)say('✅ Area '+k+' is ready! '+TOOLS[tool][2]);renderPlan();}
+const map=$('#map');
+map.onclick=e=>{const h=e.target.closest('[data-a]');if(h)put(h.dataset.a)};
+map.ondragover=e=>{e.preventDefault()};
+map.ondrop=e=>{e.preventDefault();const h=e.target.closest('[data-a]');if(h)put(h.dataset.a)};
+function final(){st='final';view='after';last=null;draw();say('🎉 Forest Restoration Plan Complete!');showFinal();}
+function showFinal(){panel(`<div class="card"><h2>🌳 Whispering Forest Restoration Plan</h2>
+ <div class="tabs" role="tablist"><button id="b" class="${view==='before'?'on':''}">BEFORE 🔥</button><button id="a" class="${view==='after'?'on':''}">AFTER 🌱</button></div>
+ <p style="font-weight:600;margin:14px 0 0">You used AI to find areas that needed help, and you created a plan to bring the Whispering Forest back to life!</p></div>
+ <div class="badge">🌳 Forest Ranger Mission Complete!</div><button class="big" id="again">🔄 SCAN THE FOREST AGAIN</button>`);
+ $('#b').onclick=()=>{view='before';draw();showFinal()};$('#a').onclick=()=>{view='after';draw();showFinal()};$('#again').onclick=welcome;}
+welcome();
+</script>
+</body>
+</html>
